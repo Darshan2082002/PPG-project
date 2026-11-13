@@ -1,0 +1,46 @@
+PTT DATASET MASTER INVENTORY AND MODALITY REPORT
+======================================================
+1. USABLE RECORDINGS
+- Total Usable Recordings: 62
+- Excluded Recordings: 1
+
+2. SUBJECTS AND ACTIVITIES
+- Total Unique Subjects: 22 (s1, s10, s11, s12, s13, s14, s15, s16, s17, s18, s19, s2, s20, s21, s22, s3, s4, s5, s6, s7, s8, s9)
+- Identified Activities: run, sit, walk
+
+3. METADATA (subjects_info.csv)
+- Metadata File Found: False
+- Available Fields: None
+- Recordings Successfully Mapped to Metadata: 0 / 62
+
+4. PPG CHANNEL COMPARISON
+channel  avg_missing_pct  avg_variance
+pleth_2              0.0 770717.073403
+pleth_5              0.0 456132.849222
+pleth_4              0.0 300801.518730
+pleth_1              0.0 257330.348391
+pleth_3              0.0  54157.927202
+pleth_6              0.0  29747.258808
+
+5. ACCELEROMETER & ECG INVENTORY
+- All 3 ACC axes (X, Y, Z) available across usable recordings: True
+- ECG available in usable recordings: True
+
+======================================================
+CRITICAL SCIENTIFIC CONCLUSIONS
+
+A. Which PPG channel is quantitatively best and why?
+The recommended channel is 'PLETH_2'. It exhibits the lowest average missing data (0.00%) and provides a strong signal variance (770717.07), ensuring the highest contiguous data quality and dynamic range for feature extraction.
+
+B. Are all three ACC axes available for motion artifact reduction?
+Yes. a_x, a_y, and a_z are populated across the usable recordings and can serve as multidimensional noise references.
+
+C. Is ECG available, and how will it be restricted in this project?
+Yes, ECG is available. However, it will strictly be reserved as a ground-truth reference for validating arrhythmia events or PTT calculations during the final analysis phase. It will NOT be fed into the machine learning model as an input feature.
+
+D. Can metadata (demographics/BP) from subjects_info.csv be mapped to the recordings?
+Mapping is incomplete or subjects_info.csv is missing. Metadata integration requires manual alignment.
+
+E. What is the final count of usable recordings moving to the next stage?
+62 highly valid recordings are approved for the upcoming preprocessing and synchronization pipelines.
+======================================================

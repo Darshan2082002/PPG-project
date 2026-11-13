@@ -1,0 +1,39 @@
+====================================================
+PTT DATASET DETAILED INSPECTION REPORT
+====================================================
+
+A. What is the actual PPG sampling frequency?
+-> Based on the median time difference (dt) across all files, the estimated sampling frequency is ~nan Hz.
+   (If this returns NaN, the 'time' column is missing, corrupt, or strictly integer without sub-second resolution).
+
+B. What is the actual accelerometer sampling frequency?
+-> nan Hz. Because PPG and Accelerometer data are aligned row-by-row in the same CSV files, they share the identical sampling rate and time vector.
+
+C. Are PPG and accelerometer sampled on the same time base?
+-> Yes. They exist as columns within the same CSVs synchronized to the same 'time' column.
+
+D. Which PPG channel should we initially use?
+-> 'PPG1' has the best data completeness across the dataset. 
+   (Average missing data: 0.00%).
+
+E. Are PPG and accelerometer recordings available together?
+-> Yes. 
+   Average ACC missing data is 0.00%.
+
+F. Are timestamps suitable for future synchronization?
+-> Monotonic check: 63 files have backwards-jumping timestamps.
+-> Duplicates check: 0 files contain duplicate timestamps.
+-> Gaps check: 0 files contain significant time gaps (>1.5x median dt).
+   (Conclusion: Requires preprocessing/interpolation before synchronization).
+
+G. What activities are available?
+-> run, sit, walk
+
+H. How many subjects and recordings are available?
+-> Subjects: 22
+-> Total Recordings: 63
+
+I. Does this dataset appear suitable for developing a motion-aware PPG processing pipeline?
+-> Warning: Critical modalities (PPG or ACC) are missing or the timebase is unreliable.. 
+   The presence of simultaneous multi-channel PPG and 3-axis Accelerometer data makes it structurally ideal for motion artifact reduction research, provided any timestamp gaps are interpolated.
+====================================================

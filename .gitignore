@@ -1,0 +1,44 @@
+# Python virtual environments
+.venv/
+venv/
+env/
+ENV/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Jupyter / notebooks
+.ipynb_checkpoints/
+
+# ML training outputs and generated artifacts
+outputs/*
+!outputs/.gitkeep
+*.npz
+*.h5
+*.tflite
+*.png
+*.csv
+
+# Dataset folders (large local data)
+MIMIC_2/
+"Pulse Transit Time PPG Dataset/"
+
+# Firmware / embedded build artifacts
+firmware/.pio/
+firmware/src/model.h
+*.bin
+*.elf
+*.uf2
+
+# VS Code / OS clutter
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+*.hea
+*.dat
+*.art
+*.txt 

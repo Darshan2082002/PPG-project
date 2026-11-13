@@ -1,0 +1,16 @@
+PTT DATASET DATETIME SAMPLING RATE REPORT
+===================================================
+A. Actual Datetime Parsing Success?
+   Yes. Pandas successfully extracted microsecond precision from the strings, enabling exact calculation of dt in seconds.
+
+B. Sampling Rates Detected:
+   Overall Median Fs: 500.00 Hz
+   Distribution of Fs (rounded to 1 decimal): [np.float64(500.0)]
+   The dataset uses a consistent primary sampling rate.
+
+C. Timestamp Integrity & Backward Jumps:
+   Total negative dt (backward jumps) across all processed files: 1.
+
+D. Modality Alignment:
+   PPG Fs = ACC Fs: Yes. Verification confirmed PPG and ACC channels exist within the exact same DataFrame index, sharing the unified timestamp column natively.
+===================================================

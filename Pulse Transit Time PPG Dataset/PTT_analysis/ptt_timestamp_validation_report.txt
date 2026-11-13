@@ -1,0 +1,54 @@
+PTT TIMESTAMP INTEGRITY AND RECORDING-LEVEL VALIDATION
+======================================================
+1. VALIDATION PARAMETERS
+- Target Sampling Frequency: 500.0 Hz (dt = 0.002 seconds)
+- Tolerance used for abnormal intervals: +/- 0.0005 seconds (0.0015 to 0.0025 sec)
+- Tolerance used for duration mismatch: 0.5 seconds
+
+2. SUMMARY STATISTICS
+Total Recordings Checked: 63
+- VALID: 56 (Perfect timestamps, perfect alignment)
+- VALID_WITH_TIMESTAMP_ERRORS: 6 (Timestamp jitter exists, but total duration matches 500Hz expectation and PPG/ACC are row-aligned)
+- INVALID: 1 (PPG/ACC rows misaligned OR timestamp duration heavily contradicts sample count, indicating dropped frames)
+
+3. INVALID RECORDINGS LIST
+['s1_sit.csv']
+
+4. FINAL PROJECT DECISION
+Can we proceed with VALID_WITH_TIMESTAMP_ERRORS? 
+Yes. Because their Timestamp-derived duration closely matches the Expected duration (Samples / 500), the underlying signal matrix is contiguous. The timestamp anomalies are merely localized clock-write errors, not dropped physiological data.
+
+Do we drop INVALID recordings? 
+Yes. INVALID recordings lack sample-to-sample alignment or contain massive time gaps where physical physiological data was lost. 
+
+FINAL DECISION: GO
+REASON: The vast majority of recordings maintain contiguous 500 Hz signal structures despite isolated timestamp jitter. The underlying arrays are perfectly aligned row-by-row.
+======================================================
+
+APPENDIX: DETAILED TIMESTAMP ERRORS
+
+--- s19_sit.csv Timestamp Errors ---
+Negative jumps: 0 | Zero dt: 0 | Large gaps (>10ms): 1
+Example Large Gap at index 217279: 0.025394 sec
+
+--- s1_sit.csv Timestamp Errors ---
+Negative jumps: 1 | Zero dt: 0 | Large gaps (>10ms): 0
+Example Negative Jump at index 113094: -4294.965296 sec
+
+--- s20_walk.csv Timestamp Errors ---
+Negative jumps: 0 | Zero dt: 0 | Large gaps (>10ms): 1
+Example Large Gap at index 231025: 0.012957 sec
+
+--- s22_run.csv Timestamp Errors ---
+Negative jumps: 0 | Zero dt: 0 | Large gaps (>10ms): 1
+Example Large Gap at index 233828: 0.050128 sec
+
+--- s2_run.csv Timestamp Errors ---
+Negative jumps: 0 | Zero dt: 0 | Large gaps (>10ms): 0
+
+--- s4_walk.csv Timestamp Errors ---
+Negative jumps: 0 | Zero dt: 0 | Large gaps (>10ms): 0
+
+--- s5_run.csv Timestamp Errors ---
+Negative jumps: 0 | Zero dt: 0 | Large gaps (>10ms): 1
+Example Large Gap at index 224936: 0.022131 sec

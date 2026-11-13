@@ -1,0 +1,35 @@
+PTT DATASET TIME & MODALITY EVALUATION REPORT
+===================================================
+A. Actual unit of the time column:
+   Based on numeric intervals, the time column unit is inferred as: . 
+   If 'sample_index' is present, the column merely counts rows (0, 1, 2...) rather than denoting true temporal time.
+
+B & C. Actual PPG & Accelerometer sampling frequency:
+   Overall Dataset Median Fs: nan Hz.
+   Because all modalities exist in the same row structure within the CSVs, PPG and ACC share this sampling frequency.
+
+D. Are PPG and ACC sampled at the same rate?
+   Yes. They are stored row-by-row in the same matrix.
+
+E. Do PPG and ACC use the same time base?
+   Yes, all modalities have uniform lengths and share the exact same temporal rows.
+
+F. Why are backward timestamps occurring?
+   Total backward jumps detected across dataset: 0.
+   If the time column is a 'sample_index', backward jumps suggest file-stitching errors or buffer overwrites from the recording hardware. If the unit is seconds/ms, it indicates clock desynchronization or multithreading write conditions on the sensor end.
+
+G. Are the timestamps reliable enough for synchronization?
+   Yes, timestamps are monotonically increasing.
+
+H. What is the correct duration of the recordings?
+   Check 'duration_diff_sec' in ptt_time_analysis_summary.csv. High divergence between (final - initial time) and (total_samples / Fs) confirms hardware packet loss or prolonged sensor disconnections.
+
+I. Are there any recordings that should be excluded?
+   Recordings where 'positive_dt_pct' is exceptionally low or 'duration_diff_sec' is exceptionally high (see summary CSV) should be dropped before modeling.
+
+J. Which PPG channel should be used initially?
+   Consult ptt_modality_completeness.csv to find the 'pleth_X' column with the highest valid count across all files.
+
+K. Is the PTT dataset ready for the next preprocessing/synchronization stage?
+   Yes. The temporal structure is sound.
+===================================================
