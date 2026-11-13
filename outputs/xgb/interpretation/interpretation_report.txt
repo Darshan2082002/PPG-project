@@ -1,0 +1,39 @@
+Model Interpretation Report -- XGBoost
+============================================================
+Generated at : 2026-10-06 09:55:37
+Elapsed time : 3.2 s
+Output dir   : D:\PPG project CB.SC.P2AIE25005_DARSHAN_B\outputs\xgb\interpretation
+
+Classes
+-------
+  0: Normal
+  1: AFib
+  2: Bradycardia
+  3: Tachycardia
+  4: Other
+
+Generated Files
+---------------
+  lime_xgb_AFib_sample0.png
+  lime_xgb_AFib_sample1.png
+  lime_xgb_Bradycardia_sample0.png
+  lime_xgb_Bradycardia_sample1.png
+  lime_xgb_Normal_sample0.png
+  lime_xgb_Normal_sample1.png
+  lime_xgb_Tachycardia_sample0.png
+  lime_xgb_Tachycardia_sample1.png
+  xgb_importance_cover.png
+  xgb_importance_gain.png
+  xgb_importance_weight.png
+  shap_report.txt
+
+Interpretation Methods
+----------------------
+  SHAP (TreeExplainer / DeepExplainer)
+    Global feature ranking, beeswarm plots, dependence plots.
+  Grad-CAM
+    Highlights PPG time regions driving each class prediction.
+  Integrated Gradients
+    Signed attribution map; baseline = flat-zero PPG signal.
+  LIME
+    25-segment perturbation; local Ridge proxy model.

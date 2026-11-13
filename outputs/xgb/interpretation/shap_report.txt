@@ -1,0 +1,29 @@
+XGBoost Native Feature Importance Report
+(SHAP TreeExplainer unavailable -- XGBoost 3.x incompatibility)
+=======================================================
+Top Features by Gain (avg information gain per split):
+   1. f6                                   264.5717
+   2. f5                                   84.6118
+   3. f2                                   57.0328
+   4. f13                                  56.6330
+   5. f1                                   39.9641
+   6. f8                                   30.2434
+   7. f15                                  22.2071
+   8. f14                                  21.8364
+   9. f4                                   21.6262
+  10. f25                                  20.8574
+  11. f12                                  20.4304
+  12. f16                                  17.0002
+  13. f11                                  16.0571
+  14. f26                                  15.6352
+  15. f3                                   15.2379
+  16. f9                                   11.2469
+  17. f24                                  10.3367
+  18. f18                                  10.1597
+  19. f10                                  9.7579
+  20. f0                                   8.6670
+
+Note: To enable SHAP, downgrade XGBoost:
+  pip install "xgboost>=2.0.0,<3.0.0"
+  python train_models.py --models xgb
+  python interpret_models.py --models xgb

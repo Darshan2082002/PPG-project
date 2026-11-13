@@ -1,0 +1,12 @@
+{
+  "tcn": {
+    "model_name": "tcn",
+    "timestamp": "2026-10-03 03:08:59",
+    "num_test": 12870,
+    "total_params": 203205,
+    "model_size_kb": 793.8,
+    "h5_size_kb": 2703.9,
+    "inference_ms_total": 59458.86,
+    "inference_ms_sample": 4619.958
+  }
+}

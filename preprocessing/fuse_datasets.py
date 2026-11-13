@@ -34,6 +34,15 @@ from preprocessing.label_mapping     import print_class_distribution, NUM_CLASSE
 logging.basicConfig(level=logging.INFO, format="%(levelname)s | %(message)s")
 logger = logging.getLogger(__name__)
 
+# ── GPU detection (informational) ──────────────────────────────────────────────
+try:
+    import cupy as cp
+    logger.info("fuse_datasets: GPU DETECTED – preprocessing will use GPU (device %d, %.0f MB free)",
+                cp.cuda.Device().id,
+                cp.cuda.Device().mem_info[0] / 1e6)
+except ImportError:
+    logger.info("fuse_datasets: CuPy not installed – preprocessing will run on CPU")
+
 # ── output directory ──────────────────────────────────────────────────────────
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "..", "outputs")
 OUTPUT_PATH = os.path.join(OUTPUT_DIR, "dataset.npz")

@@ -10,6 +10,16 @@ from the corrupted PPG signal, leaving a cleaner cardiac signal.
 Reference:
   Widrow et al., "Adaptive Noise Cancelling: Principles and Applications",
   Proceedings of the IEEE, 1975.
+
+Acceleration Strategy
+---------------------
+- ACC magnitude  : GPU via CuPy (vectorised, benefits from GPU parallelism)
+- LMS filter loop: Numba @njit (compiled native code, ~10-30x faster than
+  plain NumPy loop).  The LMS algorithm is *inherently sequential* — each
+  weight update depends on the previous — so calling GPU kernels per sample
+  in a Python loop is far SLOWER than CPU.  Numba compiles the loop to
+  native LLVM machine code with no algorithm changes.
+  Falls back to plain NumPy if Numba is not installed.
 """
 
 import numpy as np
@@ -17,10 +27,120 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# ── GPU / CuPy initialisation (for vectorised ACC magnitude) ──────────────────
+
+try:
+    import cupy as cp
+    _GPU_AVAILABLE = True
+    logger.info("motion_artifact: CuPy detected – ACC magnitude on GPU (device %d)",
+                cp.cuda.Device().id)
+except ImportError:
+    cp = None
+    _GPU_AVAILABLE = False
+
+# ── Numba JIT initialisation (for compiled LMS loop) ─────────────────────────
+
+try:
+    from numba import njit
+    _NUMBA_AVAILABLE = True
+    logger.info("motion_artifact: Numba detected – LMS loop will be JIT-compiled")
+except ImportError:
+    _NUMBA_AVAILABLE = False
+    logger.info("motion_artifact: Numba not found – LMS loop running as plain NumPy")
+
+
+# ── Numba-compiled LMS kernel ─────────────────────────────────────────────────
+# Defined at module level so Numba can compile it once and cache it.
+# If Numba is unavailable we define a plain Python fallback with the same
+# signature so the rest of the code does not need to branch.
+
+if _NUMBA_AVAILABLE:
+    @njit(cache=True, fastmath=True)
+    def _lms_kernel(
+        ppg_norm: np.ndarray,
+        ref_norm: np.ndarray,
+        order: int,
+        mu: float,
+    ) -> np.ndarray:
+        """Numba-compiled NLMS loop. Runs as native machine code."""
+        N = len(ppg_norm)
+        w             = np.zeros(order)
+        filtered_norm = np.zeros(N)
+        two_mu_order  = 2.0 * mu * order
+
+        for n in range(order, N):
+            # Reverse slice of reference (FIR convolution)
+            x = ref_norm[n - order:n][::-1]
+
+            noise_est = 0.0
+            for k in range(order):
+                noise_est += w[k] * x[k]
+
+            e = ppg_norm[n] - noise_est
+
+            # NLMS weight update
+            x_energy  = 1e-8
+            for k in range(order):
+                x_energy += x[k] * x[k]
+            step_size = two_mu_order / x_energy
+
+            for k in range(order):
+                w[k] += step_size * e * x[k]
+                if w[k] >  50.0: w[k] =  50.0
+                if w[k] < -50.0: w[k] = -50.0
+
+            filtered_norm[n] = e
+
+        # Fill warmup samples
+        for n in range(order):
+            filtered_norm[n] = ppg_norm[n]
+
+        return filtered_norm
+else:
+    def _lms_kernel(
+        ppg_norm: np.ndarray,
+        ref_norm: np.ndarray,
+        order: int,
+        mu: float,
+    ) -> np.ndarray:
+        """Plain NumPy fallback (Numba not installed)."""
+        N             = len(ppg_norm)
+        w             = np.zeros(order, dtype=np.float64)
+        filtered_norm = np.zeros(N,     dtype=np.float64)
+        two_mu_order  = 2.0 * mu * order
+
+        for n in range(order, N):
+            x         = ref_norm[n - order:n][::-1]
+            noise_est = np.dot(w, x)
+            e         = ppg_norm[n] - noise_est
+            x_energy  = np.dot(x, x) + 1e-8
+            step_size = two_mu_order / x_energy
+            w        += step_size * e * x
+            np.clip(w, -50.0, 50.0, out=w)
+            filtered_norm[n] = e
+
+        filtered_norm[:order] = ppg_norm[:order]
+        return filtered_norm
+
+
+def _to_gpu(arr: np.ndarray):
+    """Move a numpy array to GPU (no-op if CuPy unavailable)."""
+    if _GPU_AVAILABLE:
+        return cp.asarray(arr, dtype=cp.float64)
+    return arr
+
+
+def _to_cpu(arr) -> np.ndarray:
+    """Move an array back to CPU numpy (no-op if already numpy)."""
+    if _GPU_AVAILABLE and isinstance(arr, cp.ndarray):
+        return cp.asnumpy(arr)
+    return np.asarray(arr)
+
 
 def acc_magnitude_reference(acc: np.ndarray) -> np.ndarray:
     """
     Compute zero-mean ACC magnitude for use as LMS reference signal.
+    Runs on GPU when CuPy is available.
 
     Parameters
     ----------
@@ -30,11 +150,13 @@ def acc_magnitude_reference(acc: np.ndarray) -> np.ndarray:
     Returns
     -------
     ref : np.ndarray, shape (N,)
-        Zero-mean magnitude of acceleration.
+        Zero-mean magnitude of acceleration (CPU numpy).
     """
-    mag = np.sqrt(np.sum(acc ** 2, axis=1)).astype(np.float32)
-    mag -= mag.mean()  # remove DC / gravity component
-    return mag
+    xp  = cp if _GPU_AVAILABLE else np
+    acc_g = xp.asarray(acc, dtype=xp.float32)
+    mag   = xp.sqrt(xp.sum(acc_g ** 2, axis=1))
+    mag  -= mag.mean()          # remove DC / gravity component
+    return _to_cpu(mag).astype(np.float32)
 
 
 def lms_adaptive_filter(
@@ -86,31 +208,18 @@ def lms_adaptive_filter(
     ppg_norm = (ppg_noisy.astype(np.float64) - ppg_mean) / ppg_std
     ppg_norm = np.clip(ppg_norm, -20.0, 20.0)
 
-    # Initialise filter weights
-    w = np.zeros(order, dtype=np.float64)
-    filtered_norm = np.zeros(N, dtype=np.float64)
+    # ── LMS loop: Numba JIT-compiled (or plain NumPy fallback) ───────────────────
+    # NOTE: LMS is sequential by nature – each weight update depends on the
+    # previous.  A Python for-loop calling GPU kernels per sample has massive
+    # kernel-launch overhead and is actually SLOWER than CPU.  Numba compiles
+    # the loop to native LLVM machine code (~10-30x faster than plain NumPy).
+    ref_64 = ref_norm.astype(np.float64)
+    ppg_64 = ppg_norm.astype(np.float64)
 
-    for n in range(order, N):
-        x = ref_norm[n - order:n][::-1]
-        noise_est = np.dot(w, x)
-        e = ppg_norm[n] - noise_est
-        
-        # NLMS update to prevent divergence. 
-        # Multiply mu by order so the effective step size matches standard LMS
-        # on a unit-variance reference signal.
-        x_energy = np.dot(x, x) + 1e-8
-        step_size = (2.0 * mu * order) / x_energy
-        
-        w += step_size * e * x
-        w = np.clip(w, -50.0, 50.0)  # Safeguard against exploding weights
-        
-        filtered_norm[n] = e
-
-    # Fill warmup region
-    filtered_norm[:order] = ppg_norm[:order]
+    filtered_norm_cpu = _lms_kernel(ppg_64, ref_64, order, mu)
 
     # Restore original scale
-    ppg_clean = (filtered_norm * ppg_std + ppg_mean).astype(np.float32)
+    ppg_clean = (filtered_norm_cpu * ppg_std + ppg_mean).astype(np.float32)
 
     return ppg_clean
 

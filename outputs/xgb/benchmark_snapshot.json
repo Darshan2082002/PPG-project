@@ -1,0 +1,9 @@
+{
+  "xgb": {
+    "model_name": "xgb",
+    "timestamp": "2026-10-07 15:51:42",
+    "num_test": 12870,
+    "inference_ms_total": 60.18,
+    "inference_ms_sample": 4.6758
+  }
+}

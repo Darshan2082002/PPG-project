@@ -1,0 +1,12 @@
+{
+  "edge_cnn": {
+    "model_name": "edge_cnn",
+    "timestamp": "2026-10-07 18:41:11",
+    "num_test": 12870,
+    "total_params": 42213,
+    "model_size_kb": 164.9,
+    "h5_size_kb": 660.0,
+    "inference_ms_total": 2912.15,
+    "inference_ms_sample": 226.2744
+  }
+}

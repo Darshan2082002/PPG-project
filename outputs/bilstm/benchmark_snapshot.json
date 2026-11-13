@@ -1,0 +1,12 @@
+{
+  "bilstm": {
+    "model_name": "bilstm",
+    "timestamp": "2026-10-07 23:58:44",
+    "num_test": 12870,
+    "total_params": 156229,
+    "model_size_kb": 610.3,
+    "h5_size_kb": 1962.4,
+    "inference_ms_total": 5298.5,
+    "inference_ms_sample": 411.694
+  }
+}
